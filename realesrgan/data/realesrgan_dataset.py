@@ -149,27 +149,30 @@ class RealESRGANDataset(data.Dataset):
         kernel = np.pad(kernel, ((pad_size, pad_size), (pad_size, pad_size)))
 
         # ------------------------ Generate kernels (used in the second degradation) ------------------------ #
-        kernel_size = random.choice(self.kernel_range)
-        if np.random.uniform() < self.opt['sinc_prob2']:
-            if kernel_size < 13:
-                omega_c = np.random.uniform(np.pi / 3, np.pi)
-            else:
-                omega_c = np.random.uniform(np.pi / 5, np.pi)
-            kernel2 = circular_lowpass_kernel(omega_c, kernel_size, pad_to=False)
+        if self.opt.get('skip_second_degradation', False):
+            kernel2 = []
         else:
-            kernel2 = random_mixed_kernels(
-                self.kernel_list2,
-                self.kernel_prob2,
-                kernel_size,
-                self.blur_sigma2,
-                self.blur_sigma2, [-math.pi, math.pi],
-                self.betag_range2,
-                self.betap_range2,
-                noise_range=None)
+            kernel_size = random.choice(self.kernel_range)
+            if np.random.uniform() < self.opt['sinc_prob2']:
+                if kernel_size < 13:
+                    omega_c = np.random.uniform(np.pi / 3, np.pi)
+                else:
+                    omega_c = np.random.uniform(np.pi / 5, np.pi)
+                kernel2 = circular_lowpass_kernel(omega_c, kernel_size, pad_to=False)
+            else:
+                kernel2 = random_mixed_kernels(
+                    self.kernel_list2,
+                    self.kernel_prob2,
+                    kernel_size,
+                    self.blur_sigma2,
+                    self.blur_sigma2, [-math.pi, math.pi],
+                    self.betag_range2,
+                    self.betap_range2,
+                    noise_range=None)
 
-        # pad kernel
-        pad_size = (21 - kernel_size) // 2
-        kernel2 = np.pad(kernel2, ((pad_size, pad_size), (pad_size, pad_size)))
+            # pad kernel
+            pad_size = (21 - kernel_size) // 2
+            kernel2 = np.pad(kernel2, ((pad_size, pad_size), (pad_size, pad_size)))
 
         # ------------------------------------- the final sinc kernel ------------------------------------- #
         if np.random.uniform() < self.opt['final_sinc_prob']:

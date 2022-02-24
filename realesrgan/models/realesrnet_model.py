@@ -111,32 +111,35 @@ class RealESRNetModel(SRModel):
             out = self.jpeger(out, quality=jpeg_p)
 
             # ----------------------- The second degradation process ----------------------- #
-            # blur
-            if np.random.uniform() < self.opt['second_blur_prob']:
-                out = filter2D(out, self.kernel2)
-            # random resize
-            updown_type = random.choices(['up', 'down', 'keep'], self.opt['resize_prob2'])[0]
-            if updown_type == 'up':
-                scale = np.random.uniform(1, self.opt['resize_range2'][1])
-            elif updown_type == 'down':
-                scale = np.random.uniform(self.opt['resize_range2'][0], 1)
+            if self.opt.get('skip_second_degradation', False):
+                pass
             else:
-                scale = 1
-            mode = random.choice(['area', 'bilinear', 'bicubic'])
-            out = F.interpolate(
-                out, size=(int(ori_h / self.opt['scale'] * scale), int(ori_w / self.opt['scale'] * scale)), mode=mode)
-            # add noise
-            gray_noise_prob = self.opt['gray_noise_prob2']
-            if np.random.uniform() < self.opt['gaussian_noise_prob2']:
-                out = random_add_gaussian_noise_pt(
-                    out, sigma_range=self.opt['noise_range2'], clip=True, rounds=False, gray_prob=gray_noise_prob)
-            else:
-                out = random_add_poisson_noise_pt(
-                    out,
-                    scale_range=self.opt['poisson_scale_range2'],
-                    gray_prob=gray_noise_prob,
-                    clip=True,
-                    rounds=False)
+                # blur
+                if np.random.uniform() < self.opt['second_blur_prob']:
+                    out = filter2D(out, self.kernel2)
+                # random resize
+                updown_type = random.choices(['up', 'down', 'keep'], self.opt['resize_prob2'])[0]
+                if updown_type == 'up':
+                    scale = np.random.uniform(1, self.opt['resize_range2'][1])
+                elif updown_type == 'down':
+                    scale = np.random.uniform(self.opt['resize_range2'][0], 1)
+                else:
+                    scale = 1
+                mode = random.choice(['area', 'bilinear', 'bicubic'])
+                out = F.interpolate(
+                    out, size=(int(ori_h / self.opt['scale'] * scale), int(ori_w / self.opt['scale'] * scale)), mode=mode)
+                # add noise
+                gray_noise_prob = self.opt['gray_noise_prob2']
+                if np.random.uniform() < self.opt['gaussian_noise_prob2']:
+                    out = random_add_gaussian_noise_pt(
+                        out, sigma_range=self.opt['noise_range2'], clip=True, rounds=False, gray_prob=gray_noise_prob)
+                else:
+                    out = random_add_poisson_noise_pt(
+                        out,
+                        scale_range=self.opt['poisson_scale_range2'],
+                        gray_prob=gray_noise_prob,
+                        clip=True,
+                        rounds=False)
 
             # JPEG compression + the final sinc filter
             # We also need to resize images to desired sizes. We group [resize back + sinc filter] together
