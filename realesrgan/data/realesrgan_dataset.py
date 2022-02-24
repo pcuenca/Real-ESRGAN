@@ -72,6 +72,8 @@ class RealESRGANDataset(data.Dataset):
         self.betap_range2 = opt['betap_range2']
         self.sinc_prob2 = opt['sinc_prob2']
 
+        self.crop_pad_size = self.opt.get('crop_pad_size', 400)
+
         # a final sinc filter
         self.final_sinc_prob = opt['final_sinc_prob']
 
@@ -108,10 +110,9 @@ class RealESRGANDataset(data.Dataset):
         # -------------------- Do augmentation for training: flip, rotation -------------------- #
         img_gt = augment(img_gt, self.opt['use_hflip'], self.opt['use_rot'])
 
-        # crop or pad to 400
-        # TODO: 400 is hard-coded. You may change it accordingly
+        # crop or pad to fixed size
         h, w = img_gt.shape[0:2]
-        crop_pad_size = 400
+        crop_pad_size = self.crop_pad_size
         # pad
         if h < crop_pad_size or w < crop_pad_size:
             pad_h = max(0, crop_pad_size - h)
