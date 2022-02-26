@@ -3,4 +3,5 @@ from .archs import *
 from .data import *
 from .models import *
 from .utils import *
+from .blindsr import *
 from .version import *
